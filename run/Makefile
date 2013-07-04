@@ -29,3 +29,30 @@ train.lm.gz: train.tok.gz train.vocab.gz
 	#test.ppl.gz trial.ppl.gz
 	zcat $*.tok.gz | ngram -order ${LM_NGRAM} \
 	-unk -lm ukwac.lm.gz -ppl - -debug 2 | gzip > $@
+
+%.ngram.gz: %.tab
+	cat $< | cut -f1 | sed "s/’//g" | tr -d '[:punct:]' | \
+	tr '[:upper:]' '[:lower:]' | gzip > $@
+
+%.index.gz: %.tab
+	cat $< | cut -f2 | gzip > $@
+
+%.root.gz: %.tab
+	cat $< | cut -f3 | gzip > $@
+
+%.pos.gz: %.tab
+	cat $< | cut -f4 | gzip > $@
+
+%.ans.gz: %.tab
+	cat $< | cut -f5 | gzip > $@
+
+%.context: %.ngram.gz extract-context.py 
+	zcat $< | ./extract-context.py $* > $@
+
+.INTERMEDIATE: train.ngram.gz train.index.gz train.root.gz train.pos.gz train.ans.gz train.context
+%.all: %.tab %.ngram.gz %.index.gz %.root.gz %.pos.gz %.ans.gz %.context
+	echo "done"
+
+
+%.clean:
+	rm -rf $*.ngram.gz $*.root.gz $*.pos.gz $*.ans.gz $*.index.gz $*.context.gz

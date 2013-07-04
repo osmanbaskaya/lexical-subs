@@ -5,6 +5,7 @@ __author__ = "Osman Baskaya"
 
 from bs4 import BeautifulSoup
 from collections import defaultdict as dd
+import sys
 
 words = dd(list)
 
@@ -18,8 +19,8 @@ class Synset(object):
     def __str__(self):
         return ' '.join([word for word, sense in self.literals])
 
-    def __repr__(self):
-        return ' '.join([word for word, sense in self.literals])
+    #def __repr__(self):
+        #return ' '.join([word for word, sense in self.literals])
         
 def preprocess():
     soup = BeautifulSoup(open('wntur-utf8.xml'), 'xml')
@@ -30,7 +31,7 @@ def preprocess():
 def construct():
     soup, synsets = preprocess()
     for synset in synsets:
-        pos = synset.findAll('POS')
+        pos = synset.findAll('POS')[0].next
         ltrs_soup = synset.findAll('LITERAL')
         ilrs_soup = synset.findAll('ILR')
 
@@ -52,6 +53,20 @@ def construct():
 
 def find_word(word):
     return words[word]
+
+
+if __name__ == "__main__":
+    construct()
+    word = sys.argv[1]
+    synsets = find_word(word)
+    for synset in synsets:
+        literals = [d[0] for d in synset.literals]
+        print "{}|".format(synset.pos),
+        print ','.join(literals),
+        print ';',
+
+
+
 
 
 
