@@ -26,7 +26,6 @@ train.lm.gz: train.tok.gz train.vocab.gz
 	ngram-count -order ${LM_NGRAM} -kndiscount -interpolate -unk -vocab train.vocab.gz -text - -lm $@
 
 %.ppl.gz:
-	#test.ppl.gz trial.ppl.gz
 	zcat $*.tok.gz | ngram -order ${LM_NGRAM} \
 	-unk -lm ukwac.lm.gz -ppl - -debug 2 | gzip > $@
 
@@ -49,13 +48,21 @@ train.lm.gz: train.tok.gz train.vocab.gz
 %.context.gz: %.ngram.gz extract-context.py 
 	zcat $< | ./extract-context.py $* | gzip > $@
 
-.INTERMEDIATE: train.ngram.gz train.index.gz train.root.gz train.pos.gz train.ans.gz train.context.gz
+#.INTERMEDIATE: train.ngram.gz train.index.gz train.root.gz train.pos.gz train.ans.gz train.context.gz
 %.all: %.tab %.ngram.gz %.index.gz %.root.gz %.pos.gz %.ans.gz %.context.gz
 	echo "done"
 
 #TODO: wordnet.py'de dosyaya yazmayi kaldir, buradan pipe et.
 %.synsets: #%.root.gz wordnet.py:
 	./wordnet.py
+
+### 2.3 FASTSUBS options:
+FS_NSUB=100 # go until you have this many substitutes
+FS_PSUB=1.0 # or this much cumulative probability
+FS_OPTIONS=-n ${FS_NSUB} -p ${FS_PSUB}
+
+%.sub.gz: %.ngram.gz train.lm-no-punct.gz
+	zcat $< | ../bin/fastsubs ${FS_OPTIONS} train.lm-no-punct.gz | grep -P '^__XX__\t' | gzip > $@
 
 %.clean:
 	rm -rf $*.ngram.gz $*.root.gz $*.pos.gz $*.ans.gz $*.index.gz $*.context.gz
