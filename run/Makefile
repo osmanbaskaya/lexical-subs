@@ -46,13 +46,12 @@ train.lm.gz: train.tok.gz train.vocab.gz
 %.ans.gz: %.tab
 	cat $< | cut -f5 | gzip > $@
 
-%.context: %.ngram.gz extract-context.py 
-	zcat $< | ./extract-context.py $* > $@
+%.context.gz: %.ngram.gz extract-context.py 
+	zcat $< | ./extract-context.py $* | gzip > $@
 
-.INTERMEDIATE: train.ngram.gz train.index.gz train.root.gz train.pos.gz train.ans.gz train.context
-%.all: %.tab %.ngram.gz %.index.gz %.root.gz %.pos.gz %.ans.gz %.context
+.INTERMEDIATE: train.ngram.gz train.index.gz train.root.gz train.pos.gz train.ans.gz train.context.gz
+%.all: %.tab %.ngram.gz %.index.gz %.root.gz %.pos.gz %.ans.gz %.context.gz
 	echo "done"
-
 
 %.clean:
 	rm -rf $*.ngram.gz $*.root.gz $*.pos.gz $*.ans.gz $*.index.gz $*.context.gz
