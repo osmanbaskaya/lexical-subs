@@ -6,6 +6,8 @@ __author__ = "Osman Baskaya"
 from bs4 import BeautifulSoup
 from collections import defaultdict as dd
 import sys
+import gzip
+import codecs
 
 words = dd(list)
 
@@ -55,7 +57,27 @@ def find_word(word):
     return words[word]
 
 
-if __name__ == "__main__":
+def write2file(all_synsets, target_words):
+    f = codecs.open('train.wn.synset', 'w', 'utf-8')
+    for word_synsets, w in zip(all_synsets, target_words):
+        #f.write(w.decode('utf-8'))
+        if len(word_synsets) != 0:
+            for synset in word_synsets:
+                literals = [d[0] for d in synset.literals]
+                f.write("{}|".format(synset.pos))
+                f.write(','.join(literals))
+                f.write(';')
+        f.write('\n')
+    f.close()
+
+def create_synset_file():
+    construct()
+    target_words = [word.strip().decode('utf-8') for word in gzip.open('train.root.gz')]
+    synsets = map(find_word, target_words)
+    write2file(synsets, target_words)
+
+
+def main():
     construct()
     word = sys.argv[1]
     synsets = find_word(word)
@@ -64,6 +86,10 @@ if __name__ == "__main__":
         print "{}|".format(synset.pos),
         print ','.join(literals),
         print ';',
+
+if __name__ == "__main__":
+    create_synset_file()
+
 
 
 

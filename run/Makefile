@@ -53,5 +53,9 @@ train.lm.gz: train.tok.gz train.vocab.gz
 %.all: %.tab %.ngram.gz %.index.gz %.root.gz %.pos.gz %.ans.gz %.context.gz
 	echo "done"
 
+#TODO: wordnet.py'de dosyaya yazmayi kaldir, buradan pipe et.
+%.synsets: #%.root.gz wordnet.py:
+	./wordnet.py
+
 %.clean:
 	rm -rf $*.ngram.gz $*.root.gz $*.pos.gz $*.ans.gz $*.index.gz $*.context.gz
