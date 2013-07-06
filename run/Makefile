@@ -27,7 +27,7 @@ train.vocab-no-punct.gz: train.vocab-all.gz
 	tr '[:upper:]' '[:lower:]' | sed "s/’//g" | sort | uniq | gzip > $@
 	zcat $@ | wc -l
 
-train.lm.gz: train.tok.gz train.vocab.gz
+train.lm.gz: ${DATA} train.vocab.gz
 	zcat $< | awk 'length($$0) < 1001' | \
 	ngram-count -order ${LM_NGRAM} -kndiscount -interpolate -unk -vocab train.vocab.gz -text - -lm $@
 
@@ -54,7 +54,6 @@ train.lm.gz: train.tok.gz train.vocab.gz
 %.context.gz: %.ngram.gz extract-context.py 
 	zcat $< | ./extract-context.py $* | gzip > $@
 
-.INTERMEDIATE: train.ngram.gz train.index.gz train.root.gz train.pos.gz train.ans.gz train.context.gz
 %.all: %.tab %.ngram.gz %.index.gz %.root.gz %.pos.gz %.ans.gz %.context.gz
 	echo "done"
 
@@ -70,9 +69,18 @@ FS_OPTIONS=-n ${FS_NSUB} -p ${FS_PSUB}
 %.sub.gz: %.context.gz train.lm-no-punct.gz
 	zcat $< | ../bin/fastsubs ${FS_OPTIONS} train.lm-no-punct.gz | grep -P '^__XX__\t' | gzip > $@
 
+#%.sub1.gz: %.context.gz train.lm.gz
+	#zcat $< | ../bin/fastsubs ${FS_OPTIONS} train.lm.gz | grep -P '^__XX__\t' | gzip > $@
+
 NCANDIDATES=10
 %.candidates.gz: %.sub.gz ./subs2words.py
-	./subs2words.py $* ${NCANDIDATES} | gzip > $@
+	./subs2words.py $< ${NCANDIDATES} | gzip > $@
+
+#%.candidates1.gz: %.sub1.gz ./subs2words.py
+	#./subs2words.py $< ${NCANDIDATES} | gzip > $@
+
+.SECONDARY: train.ngram.gz train.index.gz train.root.gz train.pos.gz train.ans.gz \
+train.context.gz train.sub1.gz
 
 %.clean:
 	rm -rf $*.ngram.gz $*.root.gz $*.pos.gz $*.ans.gz $*.index.gz $*.context.gz
